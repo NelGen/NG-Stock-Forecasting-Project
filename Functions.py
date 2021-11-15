@@ -267,7 +267,7 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
         trainpreds = sarima.predict()
         forecast = sarima.get_forecast(len(test), index=test.index)
         testpreds = forecast.predicted_mean
-        conf = forecast.conf_int(alpha=.05)
+        conf = forecast.conf_int(alpha=.10)
         
     
     # Reverse transforms the data if log transformed initially
@@ -289,7 +289,7 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
         max_y1 = max(data['Adj Close'])
         max_y2 = max(itestpreds)
         max_y = max([max_y1,max_y2])
-        figure = plt.figure(figsize=(15,15))
+        figure = plt.figure(figsize=(10,10))
         plt.plot(itrain.append(itest), label='Original')
         plt.plot(itrainpreds.append(itestpreds),label='Model')
         
@@ -309,16 +309,22 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
             min_x = itrain.index[lengthX]
             plt.xlim(left=min_x)
             
+            max_y1 = int(max(itrain['Adj Close'].iloc[lengthX:]))
+            max_y2 = int(max(itestpreds))
+            max_y = int(max([max_y1,max_y2])*1.25)
+            
+            
             min_y1 = int(min(itrain['Adj Close'].iloc[lengthX:]))
             min_y2 = int(min(itestpreds))
             min_y = int(min([min_y1,min_y2])*.75)
-            plt.ylim(bottom=min_y)
+            plt.ylim(bottom=min_y, top=max_y)
             
         plt.legend()
+        plt.tight_layout()
         plt.show();
         
         # Plots residual data
-        sarima.plot_diagnostics()
+        sarima.plot_diagnostics(figsize=(7,7))
     # Model Summary  
     if summary:
         print(sarima.summary())
@@ -329,7 +335,7 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
 
     # Return on investment
     if roi:
-        start = itrainpreds[-1]
+        start = itestpreds[0]
         end = itestpreds[-1]
         roival = roi_calc(start=start,end=end)
         print("ROI: ", roival,"%")
@@ -408,17 +414,22 @@ def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False
             min_x = itrain.index[lengthX]
             plt.xlim(left=min_x)
             
+            max_y1 = int(max(itrain['Adj Close'].iloc[lengthX:]))
+            max_y2 = int(max(itestpreds))
+            max_y = int(max([max_y1,max_y2])*1.25)
+            
             min_y1 = int(min(itrain['Adj Close'].iloc[lengthX:]))
             min_y2 = int(min(itestpreds))
             min_y = int(min([min_y1,min_y2])*.75)
-            plt.ylim(bottom=min_y)             
+            plt.ylim(bottom=min_y, top=max_y)             
         
         
 
         plt.legend()
+        plt.tight_layout()
         plt.show();
         
-        auto.plot_diagnostics()
+        auto.plot_diagnostics(figsize=(7,7))
         
     # Model Summary
     if summary:
@@ -450,7 +461,7 @@ def create_prophet(data,exog=False,percent=.75,plotting=False,summary=False, mse
         roi = True
         mse = False
     
-    # Train/Spit and 
+    # Train/Split
     fb, fbtest = train_test(data,exog=exog,percent=percent,facebook=True, logged=logged, full=full)
     fb_model = Prophet(interval_width=.90, daily_seasonality=True)
     fb_model.fit(fb)
