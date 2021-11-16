@@ -2,7 +2,6 @@
 # Y Finance API
 # Alpha vantage API   pulling data from Yahoo Finance
 
-
 import pandas as pd
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
@@ -236,7 +235,8 @@ def train_test(data,exog=True, percent =.75,facebook=False, logged=False, full=F
 
 # # Base Model Function
 
-def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=False, logged=False, full=False, roi=False, return_roi = False):
+def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=False,
+               return_rmse=False,logged=False, full=False, roi=False, return_roi = False):
 
     # Failsafe just in case
     if full:
@@ -267,7 +267,7 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
         trainpreds = sarima.predict()
         forecast = sarima.get_forecast(len(test), index=test.index)
         testpreds = forecast.predicted_mean
-        conf = forecast.conf_int(alpha=.10)
+        conf = forecast.conf_int(alpha=.05)
         
     
     # Reverse transforms the data if log transformed initially
@@ -331,7 +331,9 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
 
     # RMSE
     if mse:
-        print('Test RMSE: ', mean_squared_error(itest, itestpreds)**0.5)
+        print('ARIMA Test RMSE: ', mean_squared_error(itest, itestpreds)**0.5)
+        if return_rmse:
+            return sarima,mean_squared_error(itest, itestpreds)**0.5
 
     # Return on investment
     if roi:
@@ -344,10 +346,10 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
     
     return sarima 
 
-
 # # Auto Arima Function
 
-def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False, mse=False, logged=False, full=False, roi = False, return_roi = False):
+def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False, mse=False, trace = False,
+                      return_rmse = False,logged=False, full=False, roi = False, return_roi = False):
 
     trainpreds = pd.DataFrame()
     testpreds = pd.DataFrame()
@@ -362,12 +364,12 @@ def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False
     # Train Test Split and Predictions
     if exog:
         train,trainv,test,testv = train_test(data=data,exog=exog, percent=percent,logged=logged, full=full)
-        auto = auto_arima(y=train ,trace=True, exog=trainv,stepwise=True, max_order=12).fit(train)
+        auto = auto_arima(y=train ,trace=trace, exog=trainv,stepwise=True, max_order=12).fit(train)
         testpreds, conf = auto.predict(len(test), index=test.index, exog=testv, return_conf_int=True)
 
     else:
         train,test= train_test(data=data,exog=exog,percent=percent, logged=logged, full=full)
-        auto = auto_arima(y=train ,trace=True,stepwise=True, max_order=12).fit(train)      
+        auto = auto_arima(y=train ,trace=trace,stepwise=True, max_order=12).fit(train)      
         trainpreds = auto.predict()
         testpreds, conf = auto.predict(len(test), index=test.index, return_conf_int=True)
 
@@ -437,7 +439,9 @@ def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False
         
     # RMSE
     if mse:
-        print('Test RMSE: ', mean_squared_error(itest, itestpreds)**0.5)
+        print('Auto Arima Test RMSE: ', mean_squared_error(itest, itestpreds)**0.5)
+        if return_rmse:
+            return auto,mean_squared_error(itest,itestpreds)**.5
 
     # Return on Investment
     if roi:
@@ -450,10 +454,10 @@ def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False
         
     return auto
 
-
 # # Prophet Function
 
-def create_prophet(data,exog=False,percent=.75,plotting=False,summary=False, mse=False, logged=False, full=False, roi=False, return_roi=False):
+def create_prophet(data,exog=False,percent=.75,plotting=False,summary=False, mse=False,
+                   return_rmse=False,logged=False, full=False, roi=False, return_roi=False):
     
     # Failsafe
     exog=False
@@ -461,7 +465,7 @@ def create_prophet(data,exog=False,percent=.75,plotting=False,summary=False, mse
         roi = True
         mse = False
     
-    # Train/Split
+    # Train/Spit and 
     fb, fbtest = train_test(data,exog=exog,percent=percent,facebook=True, logged=logged, full=full)
     fb_model = Prophet(interval_width=.90, daily_seasonality=True)
     fb_model.fit(fb)
@@ -499,9 +503,13 @@ def create_prophet(data,exog=False,percent=.75,plotting=False,summary=False, mse
         if logged:
             itest_error_y = np.exp(test_error.y)
             itest_error_yhat = np.exp(test_error.yhat)
-            print("Test RMSE:", mean_squared_error(itest_error_y,itest_error_yhat)**.5)
+            print("Logged Prophet Test RMSE:", mean_squared_error(itest_error_y,itest_error_yhat)**.5)
+            if return_rmse:
+                return fb_model,mean_squared_error(itest_error_y,itest_error_yhat)**.5
         else:
-            print("Test RMSE:", mean_squared_error(test_error.y,test_error.yhat)**.5)
+            print("Prophet Test RMSE:", mean_squared_error(test_error.y,test_error.yhat)**.5)
+            if return_rmse:
+                return fb_model,mean_squared_error(test_error.y,test_error.yhat)**.5
 
     # Return on investment
     if roi:
@@ -514,6 +522,68 @@ def create_prophet(data,exog=False,percent=.75,plotting=False,summary=False, mse
 
     return fb_model
 
+# Best Model Function
 
-
-
+def best_model(data,percent=.75, plotting=False):
+    models = ['ARIMA', 'Logged_ARIMA','Auto_ARIMA','Logged_Auto_ARIMA','Prophet','Logged_Prophet']
+    
+    # Runs all the models, with and without log transforming the data
+    sarima1,s1 = base_model(data,exog=True, percent=percent,mse=True,return_rmse=True)
+    sarima2,s2 = base_model(data,exog=True, percent=percent,mse=True,return_rmse=True, logged=True)
+    
+    auto1,a1 = create_auto_arima(data,exog=True, percent=percent,mse=True,return_rmse=True, trace = False)
+    auto2,a2 = create_auto_arima(data,exog=True, percent=percent,mse=True,return_rmse=True, trace = False,logged=True)
+    
+    fb1, f1 = create_prophet(data,exog=False, percent=percent,mse=True,return_rmse=True)
+    fb2, f2 = create_prophet(data,exog=False, percent=percent,mse=True,return_rmse=True, logged=True)
+    
+    # Determines best model using lowest RMSE
+    rmses = [s1,s2,a1,a2,f1,f2]
+    best_index = rmses.index(min(rmses))
+    rmses = np.array([s1,s2,a1,a2,f1,f2])
+    rmses_rounded = np.around(rmses,decimals=2)
+    
+    # Fits the best version of the model using the full data
+    if best_index == 0:
+        model, growth = base_model(data,exog=True,percent=percent,full=True,roi=True,return_roi=True, plotting=plotting)
+        rmse = rmses[best_index]
+        model_name=models[best_index]
+        print('Best Model:',model_name)
+    if best_index == 1:
+        model, growth = base_model(data,exog=True,percent=percent,full=True,roi=True,return_roi=True,logged=True, plotting=plotting)
+        rmse = rmses[best_index]
+        model_name=models[best_index]
+        print('Best Model:',model_name)        
+    if best_index == 2:
+        model, growth = create_auto_arima(data,exog=True,percent=percent,full=True,roi=True,return_roi=True,trace=False, plotting=plotting)
+        rmse = rmses[best_index]
+        model_name=models[best_index]   
+        print('Best Model:',model_name)        
+    if best_index == 3:
+        model, growth = create_auto_arima(data,exog=True,percent=percent,full=True,roi=True,return_roi=True,logged=True,
+                                          trace=False,plotting=plotting)
+        rmse = rmses[best_index]
+        model_name=models[best_index]
+        print('Best Model:',model_name)        
+    if best_index == 4:
+        model, growth = create_prophet(data,exog=False,percent=percent,full=True,roi=True,return_roi=True, plotting=plotting)
+        rmse = rmses[best_index] 
+        model_name=models[best_index]  
+        print('Best Model:',model_name)        
+    if best_index == 4:
+        model, growth = create_prophet(data,exog=False,percent=percent,full=True,roi=True,return_roi=True, logged=True, plotting=plotting)
+        rmse = rmses[best_index]
+        model_name=models[best_index]   
+        print('Best Model:',model_name)        
+        
+    # Converts the output into a dataframe
+    columns = models.copy()
+    columns.extend(['Best_Model', 'Best_RMSE','Expected_60day_Growth(%)'])
+    full_data = np.append(rmses_rounded,[model_name,rmses_rounded[best_index],growth])
+    
+    best_df = pd.DataFrame(columns=columns)
+    best_df.loc[0] = full_data
+    
+    return best_df
+    
+    
