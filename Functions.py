@@ -1,6 +1,6 @@
 # TO DO
 # Y Finance API
-# Alpha vantage API   pulling data from Yahoo Finance
+# Alpha vantage APIpulling data from Yahoo Finance
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -55,13 +55,11 @@ def preprocess(init_data, exog=True, facebook=False, logged=False):
         fb = fb.rename(columns={'Date': 'ds','Adj Close':'y'})
         return fb
     
-    # If using volume, splits data into 2 separate series for modeling
+    # If using volume(the exogenous variable), splits data into 2 separate series for modeling
     elif exog:
         X = data.drop(['Open','High','Low','Close'],axis=1)
         X['Date'] = pd.to_datetime(X['Date'])
         X = X.set_index('Date')
-#         start = X['Date'][0]
-#         end = X['Date'][len(X)-1]
         return X['Adj Close'],X['Volume']
     else:
         X = data.drop(['Open','High','Low','Close','Volume'],axis=1)
@@ -69,14 +67,13 @@ def preprocess(init_data, exog=True, facebook=False, logged=False):
         X = X.set_index('Date')
         return X
 
-
+# ROI Calculator, used when modeling the full data to measure growth
 def roi_calc(start,end):
     return round((end-start)/start*100,2)
 
-
-
 # Returns amount of periods to difference data, using adfuller method
 def return_d(data,alpha=0.05, plotting = False, output = False):
+    
     # Uses differencing and adfuller method to find d value for ARIMA models
     diff = data.copy()
     d = 0
@@ -110,7 +107,7 @@ def return_d(data,alpha=0.05, plotting = False, output = False):
 # Returns suggestion for moving average's p
 def return_p(data,alpha=0.05, plotting = False):
     # Determine if data needs differencing first
-    d = return_d(data,alpha)
+    d = return_d(data,alpha) # Uses differencing helper function
     new_data = data.copy()
     if d > 0:
         new_data = data.diff(periods=d).dropna()
@@ -137,7 +134,7 @@ def return_p(data,alpha=0.05, plotting = False):
 # Returns suggestion for auto regressive's q
 def return_q(data, alpha=0.05, plotting = False):
     # Determine if data needs differencing first
-    d = return_d(data,alpha)
+    d = return_d(data,alpha) # Uses differencing helper function
     new_data = data.copy()
     if d > 0:
         new_data = data.diff(periods=d).dropna()
@@ -160,7 +157,7 @@ def return_q(data, alpha=0.05, plotting = False):
     return q
 
 
-# Plots seasonal trends if any
+# Plots seasonal trends if any, not currently used
 def seasonal(data):
     decomposition = seasonal_decompose(data)
 
@@ -188,15 +185,16 @@ def seasonal(data):
 
 # Helper function to return order values for use in base model
 def model_params(data, exog=True, logged=False):
+
     if exog:
-        new_data, ex = preprocess(init_data=data,exog=exog,logged=logged)
+        new_data, ex = preprocess(init_data=data,exog=exog,logged=logged) # Uses preprocess helper function
     else:
-        new_data = preprocess(init_data=data,exog=exog,logged=logged)
+        new_data = preprocess(init_data=data,exog=exog,logged=logged) # Uses preprocess helper function
     p = return_p(new_data)
     q = return_q(new_data)
     d = return_d(new_data)
-    return p,d,q
     print("Returns: p, d, q")
+    return p,d,q
 
 
 # # Train Test Split Function
@@ -208,13 +206,13 @@ def train_test(data,exog=True, percent =.75,facebook=False, logged=False, full=F
     else:
         length = int(len(data)*percent)
     if exog:
-        X,Xv= preprocess(init_data=data,exog=exog,facebook=facebook,logged=logged)
+        X,Xv= preprocess(init_data=data,exog=exog,facebook=facebook,logged=logged) # Uses preprocess helper function
 
         train, trainv = X.iloc[:length],Xv.iloc[:length]
         test, testv = X.iloc[length:],Xv.iloc[length:]
         return train,trainv,test,testv
     else:
-        X = preprocess(init_data=data, exog=exog,facebook=facebook, logged=logged)
+        X = preprocess(init_data=data, exog=exog,facebook=facebook, logged=logged) # Uses preprocess helper function
 
         if full:
             future_index = pd.date_range(start=X.index[-1], periods=60,freq='D')
@@ -255,19 +253,19 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
     
     # Splits the data, depending on modeling with/without exogenous, and models using SARIMAX model
     if exog:
-        train,trainv,test,testv = train_test(data=data,percent = percent,exog=exog,logged=logged,full=full)
+        train,trainv,test,testv = train_test(data=data,percent = percent,exog=exog,logged=logged,full=full) # Helper Train/Test split
         sarima = sm.tsa.SARIMAX(train,order=(p,d,q),trend='c',exog=trainv).fit()
         trainpreds = sarima.predict()
         forecast = sarima.get_forecast(len(test), index=test.index, exog=testv)
         testpreds = forecast.predicted_mean
         conf = forecast.conf_int(alpha=.10)
     else:
-        train,test= train_test(data=data,percent=percent,exog=exog,logged=logged,full=full)
+        train,test= train_test(data=data,percent=percent,exog=exog,logged=logged,full=full) # Helper Train/Test split
         sarima = sm.tsa.SARIMAX(train,order=(p,d,q),trend='c').fit()      
         trainpreds = sarima.predict()
         forecast = sarima.get_forecast(len(test), index=test.index)
         testpreds = forecast.predicted_mean
-        conf = forecast.conf_int(alpha=.05)
+        conf = forecast.conf_int(alpha=.10)
         
     
     # Reverse transforms the data if log transformed initially
@@ -286,6 +284,7 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
         
     # Plots the data and the forecasts
     if plotting:
+        # Helps limit the size of the graph
         max_y1 = max(data['Adj Close'])
         max_y2 = max(itestpreds)
         max_y = max([max_y1,max_y2])
@@ -339,7 +338,7 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
     if roi:
         start = itestpreds[0]
         end = itestpreds[-1]
-        roival = roi_calc(start=start,end=end)
+        roival = roi_calc(start=start,end=end) # Uses helper function for growth
         print("ROI: ", roival,"%")
         if return_roi:
             return sarima,roival
@@ -351,9 +350,11 @@ def base_model(data,exog=True,percent = .75, plotting=False, summary=False, mse=
 def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False, mse=False, trace = False,
                       return_rmse = False,logged=False, full=False, roi = False, return_roi = False):
 
+    # Container dataframes for predictions
     trainpreds = pd.DataFrame()
     testpreds = pd.DataFrame()
     max_val=max(data['Adj Close'])
+    
     # Failsafe just in case
     if full:
         exog=False
@@ -363,12 +364,12 @@ def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False
     
     # Train Test Split and Predictions
     if exog:
-        train,trainv,test,testv = train_test(data=data,exog=exog, percent=percent,logged=logged, full=full)
+        train,trainv,test,testv = train_test(data=data,exog=exog, percent=percent,logged=logged, full=full) # Helper Train/Test split
         auto = auto_arima(y=train ,trace=trace, exog=trainv,stepwise=True, max_order=12).fit(train)
         testpreds, conf = auto.predict(len(test), index=test.index, exog=testv, return_conf_int=True)
 
     else:
-        train,test= train_test(data=data,exog=exog,percent=percent, logged=logged, full=full)
+        train,test= train_test(data=data,exog=exog,percent=percent, logged=logged, full=full) # Helper Train/Test split
         auto = auto_arima(y=train ,trace=trace,stepwise=True, max_order=12).fit(train)      
         trainpreds = auto.predict()
         testpreds, conf = auto.predict(len(test), index=test.index, return_conf_int=True)
@@ -393,6 +394,7 @@ def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False
         plot_preds = pd.DataFrame(data=itestpreds, columns=['Adj Close'], index=itest.index)
         figure = plt.figure(figsize=(10,10))
         
+        # For use in calculating the plot's y limits
         max_y1 = max(data['Adj Close'])
         max_y2 = max(itestpreds)
         max_y = max([max_y1,max_y2])
@@ -411,11 +413,12 @@ def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False
         
         if full:
             
-            # Cropping the output graphs
+            # Cropping the output graphs, xlimit
             lengthX = int(len(itrain)*.5)
             min_x = itrain.index[lengthX]
             plt.xlim(left=min_x)
             
+            # For use in calculating the plot's y limits
             max_y1 = int(max(itrain['Adj Close'].iloc[lengthX:]))
             max_y2 = int(max(itestpreds))
             max_y = int(max([max_y1,max_y2])*1.25)
@@ -431,6 +434,7 @@ def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False
         plt.tight_layout()
         plt.show();
         
+        # Plots residuals data
         auto.plot_diagnostics(figsize=(7,7))
         
     # Model Summary
@@ -447,7 +451,7 @@ def create_auto_arima(data, exog=True,percent=.75, plotting=False, summary=False
     if roi:
         start = itestpreds[0]
         end = itestpreds[-1]
-        roival = roi_calc(start=start,end=end)
+        roival = roi_calc(start=start,end=end) # Helper growth calculating function
         print("ROI: ", roival,"%")
         if return_roi:
             return auto, roival
