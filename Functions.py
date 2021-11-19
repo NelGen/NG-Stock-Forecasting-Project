@@ -1,7 +1,3 @@
-# TO DO
-# Y Finance API
-# Alpha vantage APIpulling data from Yahoo Finance
-
 import pandas as pd
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
