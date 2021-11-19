@@ -38,8 +38,8 @@ These functions include:
     
 ## Predictions
 
-![]('Images/Table.PNG')
-![]('Images/Barplot.PNG')
+![](https://github.com/NelGen/NG-Stock-Forecasting-Project/blob/main/Images/Table.PNG)
+![](https://github.com/NelGen/NG-Stock-Forecasting-Project/blob/main/Images/Barplot.PNG)
 
 Out of the 6 stocks analyzed, MongoDB and Tesla have the highest expected growth rates of approximately 17% each, however,
 with a low degree of confidence.
