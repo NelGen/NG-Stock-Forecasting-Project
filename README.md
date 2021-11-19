@@ -38,6 +38,7 @@ These functions include:
     
 ## Predictions
 
+**Table of RMSE's by Model**
 ![](https://github.com/NelGen/NG-Stock-Forecasting-Project/blob/main/Images/Table.PNG)
 ![](https://github.com/NelGen/NG-Stock-Forecasting-Project/blob/main/Images/Barplot.PNG)
 
