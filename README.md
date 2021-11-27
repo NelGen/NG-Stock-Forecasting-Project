@@ -13,6 +13,7 @@ The models trained and functions developed will be tuned specifically for stock 
 5 years of historical stock prices downloaded from Yahoo! Finance.  Only the Adjusted Closing Price will be used with Volume being the exogenous variable.  Using other prices such as Opening Price for the day could introduce unwanted collinearity since the opening price for the next day will be equal to the closing price of the prior.
 
 Stock analysis examples include:
+<<<<<<< HEAD
 * MongoDB (MDB)
         - MongoDB experienced significant growth over the last 3 years with the continued rise in the value of data. Could the models catch large spikes in growth?
 * American Airlines (AAL)
@@ -24,6 +25,19 @@ Stock analysis examples include:
 * Intel (INTC)
         - Intel has seen a lot of competition in the tech market as well.  Looking at how it may continue to be affected.
 * Tesla (TSLA)
+=======
+    1. MongoDB (MDB)
+        - MongoDB experienced significant growth over the last 3 years with the continued rise in the value of data. Could the models catch large spikes in growth?
+    2. American Airlines (AAL)
+        - The airline industry has suffered due to recent events.  Want to analyze what the next few months may look like for one major airline.
+    3. Amazon (AMZN)
+        - One of the most popular big tech companies which should be a safe bet to invest in.
+    4. General Electric (GE)
+        - GE has been on a steady decline over the years.  Using this stock as an example of potentially negative or no growth.
+    5. Intel (INTC)
+        - Intel has seen a lot of competition in the tech market as well.  Looking at how it may continue to be affected.
+    6. Tesla (TSLA)
+>>>>>>> ac057a4e6d4e3246acf61d157fa7acab8e93cb3d
         - A very popular stock experiencing significant growth.  Would be interesting to analyze other data sources such as social media  and review its impact on this stock's price.
     
 
