@@ -1,3 +1,6 @@
+# Processing and Modeling Functions
+## Designed to streamline forecasting for stock price data
+
 import pandas as pd
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
@@ -544,6 +547,7 @@ def best_model(data,percent=.75, plotting=False):
     rmses_rounded = np.around(rmses,decimals=2)
     
     # Fits the best version of the model using the full data
+    # Indexes are [Base Model:0, Base Model with log:1, AutoARIMA:2, AutoARIMA with log:3, Prophet:4, Prophet with log:5]
     if best_index == 0:
         model, growth = base_model(data,exog=True,percent=percent,full=True,roi=True,return_roi=True, plotting=plotting)
         rmse = rmses[best_index]
