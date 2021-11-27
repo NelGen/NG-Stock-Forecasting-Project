@@ -14,17 +14,17 @@ The models trained and functions developed will be tuned specifically for stock 
 
 Stock analysis examples include:
     1. MongoDB (MDB)
-        i. MongoDB experienced significant growth over the last 3 years with the continued rise in the value of data. Could the models catch large spikes in growth?
+        - MongoDB experienced significant growth over the last 3 years with the continued rise in the value of data. Could the models catch large spikes in growth?
     2. American Airlines (AAL)
-        i. The airline industry has suffered due to recent events.  Want to analyze what the next few months may look like for one major airline.
+        - The airline industry has suffered due to recent events.  Want to analyze what the next few months may look like for one major airline.
     3. Amazon (AMZN)
-        i. One of the most popular big tech companies which should be a safe bet to invest in.
+        - One of the most popular big tech companies which should be a safe bet to invest in.
     4. General Electric (GE)
-        i. GE has been on a steady decline over the years.  Using this stock as an example of potentially negative or no growth.
+        - GE has been on a steady decline over the years.  Using this stock as an example of potentially negative or no growth.
     5. Intel (INTC)
-        i. Intel has seen a lot of competition in the tech market as well.  Looking at how it may continue to be affected.
+        - Intel has seen a lot of competition in the tech market as well.  Looking at how it may continue to be affected.
     6. Tesla (TSLA)
-        i. A very popular stock experiencing significant growth.  Would be interesting to analyze other data sources such as social media  and review its impact on this stock's price.
+        - A very popular stock experiencing significant growth.  Would be interesting to analyze other data sources such as social media  and review its impact on this stock's price.
     
 
 ## Strategies
