@@ -468,7 +468,7 @@ def create_prophet(data,exog=False,percent=.75,plotting=False,summary=False, mse
         roi = True
         mse = False
     
-    # Train/Spit and 
+    # Train/Split
     fb, fbtest = train_test(data,exog=exog,percent=percent,facebook=True, logged=logged, full=full)
     fb_model = Prophet(interval_width=.90, daily_seasonality=True)
     fb_model.fit(fb)
@@ -574,7 +574,7 @@ def best_model(data,percent=.75, plotting=False):
         rmse = rmses[best_index] 
         model_name=models[best_index]  
         print('Best Model:',model_name)        
-    if best_index == 4:
+    if best_index == 5:
         model, growth = create_prophet(data,exog=False,percent=percent,full=True,roi=True,return_roi=True, logged=True, plotting=plotting)
         rmse = rmses[best_index]
         model_name=models[best_index]   
